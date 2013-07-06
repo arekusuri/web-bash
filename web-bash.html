@@ -1,111 +1,20 @@
 <html>
 <head id="head">
 <style type="text/css">
-    p {margin:0cm;}
+	p {margin:0cm;}
 	span {background-color:#ffffcc; color:white;}
 	body {background-color:#000000; color:green; font-family:monospace;font-size:20px;}
 </style>
-<resource href="root_bin.info">
-</resource>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"> </script>
+<script src="bash.js"></script>
 <script>
-function create_ps(){
-	var text = "/home/" + document.login_user + "/ $ "
-	return document.createTextNode(text)
-}
-function create_prompt_char(){
-	var prompt_char = document.createElement("span")
-	prompt_char.setAttribute("id", "prompt")
-	prompt_char.innerHTML = "&nbsp;"
-	return prompt_char
-}
-function add_prompt_line(){
-	var new_p = document.createElement('p');
-	new_p.appendChild(create_ps())
-	new_p.appendChild(create_prompt_char())
-	var terminal_div = document.getElementById('terminal');
-	terminal_div.appendChild(new_p)
-}
-function printline(text){
-	var new_p = document.createElement('p');
-	var line = document.createTextNode(text);
-	new_p.appendChild(line)
-	var terminal_div = document.getElementById('terminal');
-	terminal_div.appendChild(new_p)
-}
-function terminal_onload(){
-	add_prompt_line()
-}
-function getchar(event){
-	if (event.which == null) {
-		return String.fromCharCode(event.keyCode) // IE
-	} else if (event.which!=0 && event.charCode!=0) {
-		return String.fromCharCode(event.which)   // the rest
-	} else {
-		return null // special key
-	}
-}
-function get_input(p){
-	var text = ""
-	for (var i = 1; i < p.childNodes.length; i++){
-		var child = p.childNodes[i];
-		text += child.textContent
-	}
-	return text
-}
-function key(e){
-	var prompt_char = document.getElementById('prompt')//[0];
-	var current_p = prompt_char.parentNode
-	current_p.removeChild(prompt_char);
-	if (e.keyCode == 13){
-		var input = get_input(current_p)
-		if (current_p.firstChild.textContent == "login: "){
-			if (input == "") {
-				document.login_user = "guest"
-			}else{
-				document.login_user = input
-			}
-		}else{
-			if (input==""){
-				//
-			}else if (input=="ls"){ printline("comming soon...")			
-			}else if (input=="help"){ printline("comming soon...")			
-			}else if (input=="cd"){ printline("comming soon...")			
-			}else if (input=="man"){ printline("comming soon...")			
-			}else if (input=="pwd"){ printline("comming soon...")			
-			}else{
-				printline("-bash: "+input+": command not found")			
-			}
-		}
-		add_prompt_line()
-	} else{
-		var c =getchar(e)
-		var new_char = document.createTextNode(c)
-		current_p.appendChild(new_char)
-		current_p.appendChild(prompt_char)
-	}
-	window.scrollTo(0, document.body.scrollHeight);
-}
-//function loadscript(filename){
-//	var head= document.getElementsByTagName('head')[0];
-//	var script= document.createElement('script');
-//	script.type= 'text/javascript';
-//	script.src= 'b.js';
-//	head.appendChild(script);
-//}
+$().ready(function() {
+	load_bash();
+});
 </script>
 </head>
 
-<body onkeypress="key(event)"  >
-<div id="terminal" onload="terminal_onload()">
-	<p>&nbsp;</p>
-	<p>***********  Welcome to web bash! *******</p>
-	<p>***********  Take a bath on web. &nbsp;*******</p>
-	<p>&nbsp;</p>
-	<p>Press "Enter" to login as guest...</p>
-	<p>login: <span id="prompt">&nbsp;</span></p>
-	<!--
-	<p>/home/yourname/ $ <span id="prompt">&nbsp;</span></p>
-	-->
-</div>
+<body >
+<div class="terminal" />
 </body>
 </html>
