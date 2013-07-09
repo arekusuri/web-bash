@@ -1,6 +1,6 @@
 var terminal
 var login_user = ""
-var current_work_dir = "/";
+var file_sys_root;
 
 function load_bash(){
 	add_css();
@@ -12,7 +12,6 @@ function load_bash(){
 function add_css(){
 	var head = $("head")
 	head.append('<link rel="stylesheet" type="text/css" href="bash.css" />')
-	head.append('<link rel="stylesheet" type="text/css" href="ls.css" />')
 }
 function printwelcome(){
 	terminal = $(".terminal");
@@ -90,8 +89,8 @@ function keypress_handler(e){
 		}else{
 			input == input.trim();
 			if (input==""){
-			}else if (input=="ls"){
-				ls();
+			}else if (input=="ls" || input.match("^ls ")){
+				ls(input);
 			}else if(input=="help"){
 				print_text("comming soon...")			
 			}else if(input.match("^cd/*\.*$") || input.match("^cd ")){
@@ -161,28 +160,36 @@ function fileobj(name,parent,content){
 		parent.add_child(this);
 	}
 }
-var file_sys_root;
+var current_work_dir;
 function install_file_system_adv(){
 	file_sys_root 	= new dirobj("/");
 	var home 	= new dirobj("home", file_sys_root);
 	var tmp 	= new dirobj("tmp", file_sys_root);
 	var guest 	= new dirobj("guest", home);
-	var testfile 	= new fileobj("testfile", file_sys_root, "test content")
+	var testfile 	= new fileobj("testfile", file_sys_root, "test content");
+	current_work_dir = file_sys_root;
 }
-function ls(){
-	var nodes = JSON.parse(localStorage.getItem(current_work_dir)) || [];
-	var text = ""
-	for (var i = 0; i < nodes.length; i++){
-		node = nodes[i][0]
-		type = nodes[i][1]
-		if (type == "d"){
-			html_class = "dir" 
-		}else{
-			html_class = "file" 
+function ls(cmd){
+	var target;
+	if (cmd.length > 2){
+		return;
+		target = cmd.slice(2).trim();
+		if (target.indexOf("/") != 0){
+			target = current_work_dir + target
 		}
-		text += "<span class='" + html_class + "'>" + node + "</span>&#09;"
+	}else{
+		target = current_work_dir
 	}
-	print_html(text)
+	var str = "";
+	target.children_name.forEach(function(ele){
+		if(current_work_dir.children_data[ele].type == "d"){
+			str += "<span class='dir'>" + ele + "&nbsp;</span>"
+		}else{
+			str += "<span class='file'>" + ele + "&nbsp;</span>"
+		}
+	});
+	print_text(str);
+
 }
 function clear(){
 	terminal.children().each(function(){
@@ -190,41 +197,52 @@ function clear(){
 	});
 }
 function pwd(){
-	print_html(current_work_dir)
+	var str = "";
+	for (var node = current_work_dir; node != null; node = node.parent){
+		str = node.name + "/" + str;
+	}
+	str = str.slice(1);
+	print_html(str)
 }
 function cd(cmd){
-	cmd = cmd.trim()
-	if (cmd.match(/^cd$/)){
-		cd("cd /home/" + login_user)
-		return
-	}
-	cmd = cmd.slice(2,cmd.length)
-	cmd = cmd.trim()
-	var path = ""
-	if ( cmd.match("^\/")) {
-		path = cmd.replace(/^\/*/,"/").replace(/\/*$/,"/")
+	var success = true;
+	if(cmd.length == 2){
+		cd("cd /home/" + login_user);
 	}else{
-		path = current_work_dir + cmd.replace(/\/*$/,"/")
-	}
-	var stack = []
-	$(path.split("/")).each(function() {
-		var text = this.toString()
-		if(text == "."){
-			// pass
-		}else if(text == ".."){
-			var tmp = stack.pop()
-			if (typeof tmp == "undefined") {
-				print_text("bad dir")
-				return
-			}
-		}else if(text.match("^\\.\\.\\.\\.*")){
-			print_text("bad dir")
-			return
+		target = cmd.slice(2,cmd.length).trim();
+		var crr_dir;
+		if(target.indexOf("/") != 0){
+			crr_dir = current_work_dir;
 		}else{
-			stack.push(this)
+			crr_dir = file_sys_root;
 		}
-	});
-	current_work_dir = stack.join("/")
+		target.split("/").forEach(function(ele){
+			if(ele == "" || ele == "."){
+				return true;
+			}
+			if(crr_dir.children_name.indexOf(ele) >= 0){
+				if(crr_dir.children_data[ele].type == "d"){
+					crr_dir = crr_dir.children_data[ele];
+				}else{
+					print_text("-bash: " + target + " is not a legal directory.")
+				}
+			}else if(ele == ".."){
+				if(crr_dir.parent != null){
+					crr_dir = crr_dir.parent;
+				}else{
+					print_text("-bash: " + target + " is not a legal directory.")
+				}
+			}else{
+				success = false;
+				return false;
+			}
+		});
+		if (success){
+			current_work_dir = crr_dir;
+		}else{
+			print_text("-bash: " + target + " is not a legal directory.")
+		}
+	}
 }
 function exit(){
 	clear();
