@@ -1,4 +1,21 @@
-p {margin:0cm;}
-body {background-color:#000000; color:green; font-family:monospace;font-size:20px;}
-.cursor {background-color:#ffffcc; color:white;}
-
+p {
+	margin:0cm;
+}
+body {
+	background-color:#000000;
+	color:green;
+	font-family:monospace;
+	font-size:20px;
+}
+.cursor {
+	background-color:#ffffcc;
+	color:white;
+}
+.dir {
+	background-color: #000000;
+	color: blue;
+}
+.file {
+	background-color: #000000;
+	color: gray;
+}
